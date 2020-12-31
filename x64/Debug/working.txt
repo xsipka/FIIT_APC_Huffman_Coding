@@ -1,0 +1,142 @@
+#include <iostream>
+#include <fstream>
+#include <queue>
+#include <unordered_map>
+#include <vector>
+#include <map>
+
+
+typedef unsigned long long ull;
+const int BUFFER_SIZE = 2048;
+
+
+struct Node {
+	unsigned char m_value;
+	ull m_counter;
+	Node* m_left;
+	Node* m_right;
+};
+
+std::vector<Node> nodes;
+
+struct Comparator {
+
+	bool operator()(Node* lhs, Node* rhs) {
+		return lhs->m_counter > rhs->m_counter;
+	}
+};
+
+
+// Creates new node
+Node* create_node(unsigned char value, ull counter, Node* left, Node* right) {
+
+	Node* temp = new Node();
+	temp->m_value = value;
+	temp->m_counter = counter;
+	temp->m_left = left;
+	temp->m_right = right;
+
+	return temp;
+
+	/*Node temp;
+	temp.m_value = value;
+	temp.m_counter = counter;
+	temp.m_left = left;
+	temp.m_right = right;
+
+	nodes.push_back(temp);
+	return &nodes[nodes.size() - 1];*/
+}
+
+
+// Loads characters and their frequencies to the unordered map
+void load_data(std::ifstream& file, std::unordered_map<unsigned char, ull>& char_frequency) {
+
+	char buffer[BUFFER_SIZE];
+	size_t size = 0;
+
+	while (true) {
+
+		file.read(buffer, BUFFER_SIZE);
+		size = file.gcount();
+
+		for (size_t i = 0; i < size; ++i) {
+			char_frequency[+static_cast<unsigned char>(buffer[i])]++;
+		}
+		if (size < BUFFER_SIZE) {
+			break;
+		}
+	}
+}
+
+
+// Creates huffman code for all charcters
+void generate_code(Node* current, std::string code, std::map<unsigned char, std::string>& char_codes) {
+
+	std::cout << current->m_value << ":) \n";
+	if (current == nullptr) {
+		return;
+	}
+
+	if (!current->m_left && !current->m_right) {
+		char_codes[current->m_value] = code;
+	}
+
+	generate_code(current->m_left, code + "0", char_codes);
+	generate_code(current->m_right, code + "1", char_codes);
+}
+
+
+void huffman(std::ifstream& file) {
+
+	std::unordered_map<unsigned char, ull> char_frequency;
+	load_data(file, char_frequency);
+
+	// Create Min Heap and insert nodes into it
+	std::priority_queue<Node*, std::vector<Node*>, Comparator> queue;
+
+	for (auto& node : char_frequency) {
+		queue.push(create_node(node.first, node.second, nullptr, nullptr));
+	}
+
+	while (queue.size() != 1) {
+
+		Node* left = queue.top();
+		queue.pop();
+		Node* right = queue.top();
+		queue.pop();
+
+		auto counter = left->m_counter + right->m_counter;
+		queue.push(create_node('\0', counter, left, right));
+	}
+
+	std::map<unsigned char, std::string> char_codes;
+	Node* root = queue.top();
+	generate_code(root, "", char_codes);
+
+	for (auto& i : char_codes) {
+		std::cout << +i.first << ": " << i.second << "\n";
+	}
+}
+
+
+int main(int argc, char* argv[]) {
+
+	std::ifstream in_file;
+
+	if (argc == 2) {
+		in_file.open(argv[1], std::ios::binary);
+		if (!in_file.is_open()) {
+			std::cout << "Error: " << argv[1] << " coudn't be opened ...\n";
+			return 1;
+		}
+	}
+	else {
+		std::cout << "Invalid number of parameters ...\n";
+		return 1;
+	}
+
+	huffman(in_file);
+
+	return 0;
+}

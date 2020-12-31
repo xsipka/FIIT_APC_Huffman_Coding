@@ -1,0 +1,2 @@
+D:\Dokumenty\STU - FIIT\5. sem\C++\task_6\x64\Debug\task_6.exe
+D:\Dokumenty\STU - FIIT\5. sem\C++\task_6\x64\Debug\task_6.pdb
